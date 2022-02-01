@@ -11,6 +11,13 @@ import (
 )
 
 func main() {
+	mainCommand := setupCobraAndViper()
+	if err := mainCommand.Execute(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func setupCobraAndViper() cobra.Command {
 	mainCommand := cobra.Command{
 		Use:     "simple-temperature-store",
 		Short:   "A HTTP service to store temperature update data",
@@ -46,10 +53,7 @@ func main() {
 	if err := viper.BindEnv("http.port", "HTTP_PORT"); err != nil {
 		log.Fatal(err)
 	}
-
-	if err := mainCommand.Execute(); err != nil {
-		log.Fatal(err)
-	}
+	return mainCommand
 }
 
 func start(cmd *cobra.Command, args []string) {
