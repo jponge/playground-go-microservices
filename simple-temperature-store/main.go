@@ -53,6 +53,17 @@ func main() {
 }
 
 func start(cmd *cobra.Command, args []string) {
+	app := setupFiberApp()
+
+	host := fmt.Sprintf("%s:%d", viper.Get("http.host"), viper.GetInt("http.port"))
+	log.Printf("Listening on http://%s", host)
+	err := app.Listen(host)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func setupFiberApp() *fiber.App {
 	app := fiber.New(fiber.Config{
 		AppName:               "simple-temperature-store",
 		DisableStartupMessage: true,
@@ -66,10 +77,5 @@ func start(cmd *cobra.Command, args []string) {
 	app.Get("/data/:id", handlers.SingleDataHandler(db))
 	app.Post("/record", handlers.RecordHandler(db))
 
-	host := fmt.Sprintf("%s:%d", viper.Get("http.host"), viper.GetInt("http.port"))
-	log.Printf("Listening on http://%s", host)
-	err := app.Listen(host)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return app
 }

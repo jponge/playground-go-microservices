@@ -8,6 +8,7 @@
 - Data is stored in memory as a `map`, so a mutex is required to protect access
 - Uses `viper` and `cobra` to have a CLI and get the http server configuration from flags, environment variables or an optional configuration file
   - In a bigger code base the `cobra` command would be moved to a `cmd/` folder / package
+- Integration tests
 
 ## Usage
 

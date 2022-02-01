@@ -31,7 +31,7 @@ func RecordHandler(db *model.Database) func(ctx *fiber.Ctx) error {
 	return func(ctx *fiber.Ctx) error {
 		update := new(model.TemperatureUpdate)
 		if err := ctx.BodyParser(&update); err != nil {
-			log.Println(err)
+			log.Println(err, "->", string(ctx.Body()))
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Could not parse JSON from the request body",
 			})
