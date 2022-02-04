@@ -19,7 +19,7 @@ func TestAPI(t *testing.T) {
 		path           string
 		payload        io.Reader
 		expectedStatus int
-		expectedJson   interface{}
+		expectedJSON   interface{}
 	}
 	tests := []struct {
 		name string
@@ -32,7 +32,7 @@ func TestAPI(t *testing.T) {
 				path:           "/data",
 				payload:        nil,
 				expectedStatus: 200,
-				expectedJson: []model.TemperatureUpdate{
+				expectedJSON: []model.TemperatureUpdate{
 					{
 						SensorId: "123-abc",
 						Value:    19.2,
@@ -54,7 +54,7 @@ func TestAPI(t *testing.T) {
     				"value": 19.1
 				}`),
 				expectedStatus: 200,
-				expectedJson: model.TemperatureUpdate{
+				expectedJSON: model.TemperatureUpdate{
 					SensorId: "1",
 					Value:    19.1,
 				},
@@ -67,7 +67,7 @@ func TestAPI(t *testing.T) {
 				path:           "/data/1",
 				payload:        nil,
 				expectedStatus: 200,
-				expectedJson: model.TemperatureUpdate{
+				expectedJSON: model.TemperatureUpdate{
 					SensorId: "1",
 					Value:    19.1,
 				},
@@ -80,7 +80,7 @@ func TestAPI(t *testing.T) {
 				path:           "/data/666",
 				payload:        nil,
 				expectedStatus: 404,
-				expectedJson:   nil,
+				expectedJSON:   nil,
 			},
 		},
 	}
@@ -93,14 +93,14 @@ func TestAPI(t *testing.T) {
 			assert.NoError(t, err, "No error")
 			assert.Equal(t, tt.args.expectedStatus, resp.StatusCode, "Status code")
 
-			if tt.args.expectedJson == nil {
+			if tt.args.expectedJSON == nil {
 				return
 			}
-			expectedJson, err := json.Marshal(tt.args.expectedJson)
+			expectedJSON, err := json.Marshal(tt.args.expectedJSON)
 			assert.NoError(t, err, "JSON marshalling")
-			actualJson, err := ioutil.ReadAll(resp.Body)
+			actualJSON, err := ioutil.ReadAll(resp.Body)
 			assert.NoError(t, err, "Body response")
-			assert.JSONEq(t, string(expectedJson), string(actualJson))
+			assert.JSONEq(t, string(expectedJSON), string(actualJSON))
 		})
 	}
 }
