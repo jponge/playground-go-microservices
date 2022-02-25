@@ -1,0 +1,107 @@
+package main
+
+import (
+	"context"
+	"embed"
+	"fmt"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+)
+
+func init() {
+	viper.SetDefault("listen.address", "0.0.0.0")
+	viper.SetDefault("listen.port", 4000)
+	viper.SetDefault("api.host", "localhost")
+	viper.SetDefault("api.port", 3000)
+
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
+	viper.AddConfigPath("$HOME/.dashboard-webapp")
+	viper.AddConfigPath("/etc/dashboard-webapp")
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			log.Println("No config.yaml file was found")
+			os.Exit(1)
+		} else {
+			log.Fatal(err)
+		}
+	}
+
+	address = fmt.Sprintf("%s:%d", viper.GetString("listen.address"), viper.GetInt("listen.port"))
+	apiUrl = fmt.Sprintf("http://%s:%d/data", viper.GetString("api.host"), viper.GetInt("api.port"))
+}
+
+var address string
+var apiUrl string
+
+//go:embed assets
+var assets embed.FS
+
+func main() {
+	router := mux.NewRouter()
+	router.HandleFunc("/data", fetchData).Methods("GET")
+	router.PathPrefix("/assets/").Handler(http.StripPrefix("/", http.FileServer(http.FS(assets))))
+	router.HandleFunc("/", serveRoot).Methods("GET")
+
+	server := &http.Server{
+		Addr:         address,
+		Handler:      handlers.LoggingHandler(os.Stdout, router),
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+	}
+	go func() {
+		log.Println("🚀 Start to listen on", address)
+		err := server.ListenAndServeTLS("cert.pem", "key.pem")
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+
+	// Wait for signal
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+	<-sigChan
+
+	// Graceful shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	server.Shutdown(ctx)
+	log.Println("👋 Bye!")
+}
+
+func serveRoot(writer http.ResponseWriter, request *http.Request) {
+	http.Redirect(writer, request, "/assets/index.html", http.StatusFound)
+}
+
+func fetchData(writer http.ResponseWriter, request *http.Request) {
+	apiResponse, err := http.Get(apiUrl)
+	if err != nil {
+		sendHttp500(writer, err)
+		return
+	}
+	defer apiResponse.Body.Close()
+	writer.Header().Add("Content-Type", "application/json")
+	data, err := ioutil.ReadAll(apiResponse.Body)
+	if err != nil {
+		sendHttp500(writer, err)
+	}
+	_, err = fmt.Fprint(writer, string(data))
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func sendHttp500(writer http.ResponseWriter, err error) {
+	log.Println(err)
+	writer.WriteHeader(500)
+	fmt.Fprint(writer, err)
+}
