@@ -18,6 +18,8 @@ import (
 func init() {
 	viper.SetDefault("listen.address", "0.0.0.0")
 	viper.SetDefault("listen.port", 4000)
+	viper.SetDefault("listen.ssl.certFile", "cert.pem")
+	viper.SetDefault("listen.ssl.keyFile", "key.pem")
 	viper.SetDefault("api.host", "localhost")
 	viper.SetDefault("api.port", 3000)
 
@@ -60,7 +62,7 @@ func main() {
 	}
 	go func() {
 		log.Println("🚀 Start to listen on", address)
-		err := server.ListenAndServeTLS("cert.pem", "key.pem")
+		err := server.ListenAndServeTLS(viper.GetString("listen.ssl.certFile"), viper.GetString("listen.ssl.keyFile"))
 		if err != nil {
 			log.Println(err)
 		}
