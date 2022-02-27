@@ -1,7 +1,6 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 )
@@ -35,7 +34,7 @@ func (db *Database) AllTemperatureUpdates() []TemperatureUpdate {
 	defer db.mutex.RUnlock()
 	var entries []TemperatureUpdate
 	for k, v := range db.entries {
-		entries = append(entries, TemperatureUpdate{SensorId: k, Value: v})
+		entries = append(entries, TemperatureUpdate{SensorID: k, Value: v})
 	}
 	return entries
 }
@@ -45,9 +44,9 @@ func (db *Database) OneTemperatureUpdate(id string) (*TemperatureUpdate, error) 
 	defer db.mutex.RUnlock()
 	if value, found := db.entries[id]; found {
 		return &TemperatureUpdate{
-			SensorId: id,
+			SensorID: id,
 			Value:    value,
 		}, nil
 	}
-	return nil, errors.New(fmt.Sprintf("No entry for key %s", id))
+	return nil, fmt.Errorf("no entry for key %s", id)
 }

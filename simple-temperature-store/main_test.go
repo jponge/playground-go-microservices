@@ -34,11 +34,11 @@ func TestAPI(t *testing.T) {
 				expectedStatus: 200,
 				expectedJSON: []model.TemperatureUpdate{
 					{
-						SensorId: "123-abc",
+						SensorID: "123-abc",
 						Value:    19.2,
 					},
 					{
-						SensorId: "456-def",
+						SensorID: "456-def",
 						Value:    -2.33,
 					},
 				},
@@ -55,7 +55,7 @@ func TestAPI(t *testing.T) {
 				}`),
 				expectedStatus: 200,
 				expectedJSON: model.TemperatureUpdate{
-					SensorId: "1",
+					SensorID: "1",
 					Value:    19.1,
 				},
 			},
@@ -68,7 +68,7 @@ func TestAPI(t *testing.T) {
 				payload:        nil,
 				expectedStatus: 200,
 				expectedJSON: model.TemperatureUpdate{
-					SensorId: "1",
+					SensorID: "1",
 					Value:    19.1,
 				},
 			},

@@ -39,7 +39,7 @@ func Record(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	entity := &model.TemperatureUpdate{}
-	result := db.Where("sensor_id = ?", updateRequest.SensorId).First(entity)
+	result := db.Where("sensor_id = ?", updateRequest.SensorID).First(entity)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			result = db.Create(updateRequest)
@@ -74,9 +74,9 @@ func Record(writer http.ResponseWriter, request *http.Request) {
 }
 
 func FetchOne(writer http.ResponseWriter, request *http.Request) {
-	sensorId := chi.URLParam(request, "id")
+	sensorID := chi.URLParam(request, "id")
 	entity := &model.TemperatureUpdate{}
-	result := db.Where("sensor_id = ?", sensorId).First(entity)
+	result := db.Where("sensor_id = ?", sensorID).First(entity)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			writer.WriteHeader(404)

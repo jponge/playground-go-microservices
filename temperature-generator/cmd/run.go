@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -47,21 +46,21 @@ var runCmd = &cobra.Command{
 }
 
 func runGenerator(url string, httpClient *http.Client) {
-	sensorId := uuid.NewString()
+	sensorID := uuid.NewString()
 	var temperature = 21.0
 	for range time.Tick(5 * time.Second) {
 		time.Sleep(time.Duration(rand.Intn(3000)) * time.Millisecond)
 		temperature = updateTemperature(temperature)
-		fmt.Println("tick", sensorId, temperature)
-		jsonData := &payload{SensorId: sensorId, Value: temperature}
-		err := performHttpRequest(url, httpClient, jsonData)
+		fmt.Println("tick", sensorID, temperature)
+		jsonData := &payload{SensorID: sensorID, Value: temperature}
+		err := performHTTPRequest(url, httpClient, jsonData)
 		if err != nil {
 			fmt.Println("HTTP request failed", err)
 		}
 	}
 }
 
-func performHttpRequest(url string, httpClient *http.Client, data *payload) error {
+func performHTTPRequest(url string, httpClient *http.Client, data *payload) error {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return err
@@ -79,13 +78,13 @@ func performHttpRequest(url string, httpClient *http.Client, data *payload) erro
 		_ = Body.Close()
 	}(response.Body)
 	if response.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("HTTP request did not result in a 200 status code but %d", response.StatusCode))
+		return fmt.Errorf("HTTP request did not result in a 200 status code but %d", response.StatusCode)
 	}
 	return nil
 }
 
 type payload struct {
-	SensorId string  `json:"sensorId"`
+	SensorID string  `json:"sensorId"`
 	Value    float64 `json:"value"`
 }
 

@@ -37,7 +37,7 @@ func RecordHandler(db *model.Database) func(ctx *fiber.Ctx) error {
 			})
 		}
 		log.Printf("Record request from %s with payload %s", ctx.Request().Host(), update)
-		db.Put(update.SensorId, update.Value)
+		db.Put(update.SensorID, update.Value)
 		return ctx.JSON(update)
 	}
 }

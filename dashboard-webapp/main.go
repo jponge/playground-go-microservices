@@ -39,11 +39,11 @@ func init() {
 	}
 
 	address = fmt.Sprintf("%s:%d", viper.GetString("listen.address"), viper.GetInt("listen.port"))
-	apiUrl = fmt.Sprintf("http://%s:%d/data", viper.GetString("api.host"), viper.GetInt("api.port"))
+	apiURL = fmt.Sprintf("http://%s:%d/data", viper.GetString("api.host"), viper.GetInt("api.port"))
 }
 
 var address string
-var apiUrl string
+var apiURL string
 
 //go:embed assets
 var assets embed.FS
@@ -85,16 +85,16 @@ func serveRoot(writer http.ResponseWriter, request *http.Request) {
 }
 
 func fetchData(writer http.ResponseWriter, request *http.Request) {
-	apiResponse, err := http.Get(apiUrl)
+	apiResponse, err := http.Get(apiURL)
 	if err != nil {
-		sendHttp500(writer, err)
+		sendHTTP500(writer, err)
 		return
 	}
 	defer apiResponse.Body.Close()
 	writer.Header().Add("Content-Type", "application/json")
 	data, err := ioutil.ReadAll(apiResponse.Body)
 	if err != nil {
-		sendHttp500(writer, err)
+		sendHTTP500(writer, err)
 	}
 	_, err = fmt.Fprint(writer, string(data))
 	if err != nil {
@@ -102,7 +102,7 @@ func fetchData(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
-func sendHttp500(writer http.ResponseWriter, err error) {
+func sendHTTP500(writer http.ResponseWriter, err error) {
 	log.Println(err)
 	writer.WriteHeader(500)
 	fmt.Fprint(writer, err)

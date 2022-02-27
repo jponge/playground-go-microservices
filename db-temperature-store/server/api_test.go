@@ -34,13 +34,13 @@ func TestApiWithSqliteDb(t *testing.T) {
 	defer server.Close()
 
 	createUpdate(t, server, &model.TemperatureUpdate{
-		SensorId: "123-abc",
+		SensorID: "123-abc",
 		Value:    19.0,
 	})
 	fetchSensorData(t, server, "123-abc", true, 19.0)
 	fetchSensorData(t, server, "foo-bar", false, 0)
 	createUpdate(t, server, &model.TemperatureUpdate{
-		SensorId: "123-abc",
+		SensorID: "123-abc",
 		Value:    19.2,
 	})
 	fetchSensorData(t, server, "123-abc", true, 19.2)
@@ -61,12 +61,12 @@ func createUpdate(t *testing.T, server *httptest.Server, update *model.Temperatu
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, update.SensorId, responseUpdate.SensorId)
+	assert.Equal(t, update.SensorID, responseUpdate.SensorID)
 	assert.Equal(t, update.Value, responseUpdate.Value)
 }
 
-func fetchSensorData(t *testing.T, server *httptest.Server, sensorId string, expectedToBeFound bool, expectedTemperature float64) {
-	response, err := http.Get(server.URL + "/data/" + sensorId)
+func fetchSensorData(t *testing.T, server *httptest.Server, sensorID string, expectedToBeFound bool, expectedTemperature float64) {
+	response, err := http.Get(server.URL + "/data/" + sensorID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func fetchSensorData(t *testing.T, server *httptest.Server, sensorId string, exp
 			t.Fatal(err)
 			return
 		}
-		assert.Equal(t, sensorId, sensorData.SensorId)
+		assert.Equal(t, sensorID, sensorData.SensorID)
 		assert.Equal(t, expectedTemperature, sensorData.Value)
 	}
 }
