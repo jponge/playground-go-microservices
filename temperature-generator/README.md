@@ -6,7 +6,7 @@
 - Uses `cobra` for the CLI but not `viper` for configuration
   - Uses an idiomatic `cobra` app packages layout
   - ...so commands are package-level global variables and `init()` functions
-- The main thread handles `SIGINT` / `SIGTERM` / `SIGKILL` signals, in a more elaborated app this would allow for graceful shutdowns
+- The main thread handles `SIGINT` / `SIGTERM` signals, in a more elaborated app this would allow for graceful shutdowns
 
 ## Usage
 

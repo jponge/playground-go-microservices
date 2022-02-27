@@ -18,7 +18,7 @@ func main() {
 	}
 
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	<-signals
 	fmt.Println("👋 Bye!")
 }
