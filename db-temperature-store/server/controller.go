@@ -6,17 +6,15 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/jponge/playground-go-microservices/db-temperature-store/model"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
 
 var db *gorm.DB
 
-func init() {
-	dbc, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
+func InitDb(dialector gorm.Dialector, config *gorm.Config) {
+	dbc, err := gorm.Open(dialector, config)
 	if err != nil {
 		log.Fatal("DB opening failed", err)
 	}
@@ -34,43 +32,37 @@ func send500(writer http.ResponseWriter, err string) {
 
 func Record(writer http.ResponseWriter, request *http.Request) {
 	defer request.Body.Close()
-	bytes, err := ioutil.ReadAll(request.Body)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	update := &model.TemperatureUpdate{}
-	err = json.Unmarshal(bytes, update)
+	updateRequest, err := model.TemperatureUpdateFromJSONReader(request.Body)
 	if err != nil {
 		log.Println("JSON decoding failed")
 		send500(writer, err.Error())
 		return
 	}
 	entity := &model.TemperatureUpdate{}
-	result := db.Where("sensor_id = ?", update.SensorId).First(entity)
+	result := db.Where("sensor_id = ?", updateRequest.SensorId).First(entity)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			result = db.Create(update)
+			result = db.Create(updateRequest)
 			if result.Error != nil {
 				log.Println("Recording failed", result.Error)
 				send500(writer, result.Error.Error())
 				return
 			}
-			entity = update
+			entity = updateRequest
 		} else {
 			log.Println("Something went wrong")
 			send500(writer, result.Error.Error())
 			return
 		}
 	}
-	entity.Value = update.Value
+	entity.Value = updateRequest.Value
 	result = db.Save(entity)
 	if result.Error != nil {
 		log.Println("Updating record failed", result.Error)
 		send500(writer, result.Error.Error())
 		return
 	}
-	bytes, err = json.Marshal(entity)
+	responseBytes, err := entity.ToJSON()
 	if err != nil {
 		log.Println("JSON encoding failed")
 		send500(writer, err.Error())
@@ -78,7 +70,7 @@ func Record(writer http.ResponseWriter, request *http.Request) {
 	}
 	writer.Header().Add("Content-Type", "application/json")
 	writer.WriteHeader(200)
-	fmt.Fprintf(writer, string(bytes))
+	fmt.Fprintf(writer, string(responseBytes))
 }
 
 func FetchOne(writer http.ResponseWriter, request *http.Request) {
@@ -93,7 +85,7 @@ func FetchOne(writer http.ResponseWriter, request *http.Request) {
 		send500(writer, result.Error.Error())
 		return
 	}
-	bytes, err := json.Marshal(entity)
+	responseBytes, err := entity.ToJSON()
 	if err != nil {
 		log.Println("JSON encoding failed")
 		send500(writer, err.Error())
@@ -101,7 +93,7 @@ func FetchOne(writer http.ResponseWriter, request *http.Request) {
 	}
 	writer.Header().Add("Content-Type", "application/json")
 	writer.WriteHeader(200)
-	fmt.Fprintf(writer, string(bytes))
+	fmt.Fprintf(writer, string(responseBytes))
 }
 
 func FetchAll(writer http.ResponseWriter, request *http.Request) {

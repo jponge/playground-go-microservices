@@ -5,6 +5,7 @@
 - Uses `viper` and `cobra` for CLI and configuration
 - Uses the `gorm` ORM with a `sqlite3` backend
 - Uses `net/http` with [Chi](github.com/go-chi/chi) as a modern *muxer*.
+- Integration tests
 
 ## Usage
 

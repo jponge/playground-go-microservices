@@ -13,12 +13,7 @@ import (
 )
 
 func Start(host string, port int) {
-	router := chi.NewRouter()
-	router.Use(middleware.Logger)
-	router.Post("/record", Record)
-	router.Get("/data/{id}", FetchOne)
-	router.Get("/data", FetchAll)
-
+	router := AppRouter()
 	address := fmt.Sprintf("%s:%d", host, port)
 	server := &http.Server{
 		Addr:         address,
@@ -45,4 +40,13 @@ func Start(host string, port int) {
 	defer cancel()
 	server.Shutdown(ctx)
 	log.Println("👋 Bye!")
+}
+
+func AppRouter() *chi.Mux {
+	router := chi.NewRouter()
+	router.Use(middleware.Logger)
+	router.Post("/record", Record)
+	router.Get("/data/{id}", FetchOne)
+	router.Get("/data", FetchAll)
+	return router
 }
