@@ -16,11 +16,11 @@ var db *gorm.DB
 func InitDb(dialector gorm.Dialector, config *gorm.Config) {
 	dbc, err := gorm.Open(dialector, config)
 	if err != nil {
-		log.Fatal("DB opening failed", err)
+		log.Fatal("DB opening failed: ", err)
 	}
 	err = dbc.AutoMigrate(&model.TemperatureUpdate{})
 	if err != nil {
-		log.Fatal("Migration failed", err)
+		log.Fatal("Migration failed: ", err)
 	}
 	db = dbc
 }
