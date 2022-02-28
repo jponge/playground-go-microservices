@@ -1,8 +1,14 @@
 package server
 
 import (
+	"context"
+	"fmt"
+	"github.com/docker/go-connections/nat"
 	"github.com/jponge/playground-go-microservices/db-temperature-store/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"log"
@@ -12,38 +18,100 @@ import (
 	"testing"
 )
 
-func setupGormWithSqliteDb() (string, error) {
-	file, err := os.CreateTemp("", "test-db")
-	if err != nil {
-		return "", err
-	}
-	log.Println("Using temporary DB file", file.Name())
-	InitDb(sqlite.Open(file.Name()), &gorm.Config{})
-	return file.Name(), nil
-}
+// ------------------------------------------------------------------------- //
 
-func TestApiWithSqliteDb(t *testing.T) {
-	fileToCleanup, err := setupGormWithSqliteDb()
+func TestAPIWithSqliteDB(t *testing.T) {
+	fileToCleanup, err := os.CreateTemp("", "test-db")
 	if err != nil {
-		t.Fatal(err)
-		return
+		log.Fatal(err)
 	}
-	defer os.Remove(fileToCleanup)
+	defer os.Remove(fileToCleanup.Name())
+
+	log.Println("Using temporary DB file", fileToCleanup.Name())
+	InitDb(sqlite.Open(fileToCleanup.Name()), &gorm.Config{})
 
 	server := httptest.NewServer(AppRouter())
 	defer server.Close()
+
+	performInteractions(t, server)
+}
+
+// ------------------------------------------------------------------------- //
+
+func TestAPIWithPostgres(t *testing.T) {
+	ctx := context.Background()
+	pgPort, err := nat.NewPort("tcp", "5432")
+	req := testcontainers.ContainerRequest{
+		Image:        "docker.io/postgres:14",
+		ExposedPorts: []string{"5432/tcp"},
+		Env: map[string]string{
+			"POSTGRES_USER":     "gorm",
+			"POSTGRES_PASSWORD": "gorm",
+			"POSTGRES_DB":       "gorm",
+		},
+		WaitingFor: wait.ForListeningPort(pgPort),
+	}
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer container.Terminate(ctx)
+
+	mappedHost, err := container.Host(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	mappedPort, err := container.MappedPort(ctx, pgPort)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dsn := fmt.Sprintf("host=%s user=gorm password=gorm dbname=gorm port=%d sslmode=disable TimeZone=Europe/Paris", mappedHost, mappedPort.Int())
+	log.Println("Connection parameters", dsn)
+	InitDb(postgres.Open(dsn), &gorm.Config{})
+
+	server := httptest.NewServer(AppRouter())
+	defer server.Close()
+
+	performInteractions(t, server)
+}
+
+// ------------------------------------------------------------------------- //
+
+func performInteractions(t *testing.T, server *httptest.Server) {
+	log.Println("---- Step 1 ----")
 
 	createUpdate(t, server, &model.TemperatureUpdate{
 		SensorID: "123-abc",
 		Value:    19.0,
 	})
+
+	log.Println("---- Step 2 ----")
+
 	fetchSensorData(t, server, "123-abc", true, 19.0)
+
+	log.Println("---- Step 3 ----")
+
 	fetchSensorData(t, server, "foo-bar", false, 0)
+
+	log.Println("---- Step 4 ----")
+
 	createUpdate(t, server, &model.TemperatureUpdate{
 		SensorID: "123-abc",
 		Value:    19.2,
 	})
+
+	log.Println("---- Step 5 ----")
+
 	fetchSensorData(t, server, "123-abc", true, 19.2)
+
+	log.Println("----  Done  ----")
 }
 
 func createUpdate(t *testing.T, server *httptest.Server, update *model.TemperatureUpdate) {
@@ -86,3 +154,5 @@ func fetchSensorData(t *testing.T, server *httptest.Server, sensorID string, exp
 		assert.Equal(t, expectedTemperature, sensorData.Value)
 	}
 }
+
+// ------------------------------------------------------------------------- //
