@@ -1,0 +1,34 @@
+version: '3'
+
+vars:
+  DIST_DIR: _dist
+
+tasks:
+
+  test:
+    desc: Run all tests
+    cmds:
+      - go test ./...
+
+  force-test:
+    desc: Run all tests without caching
+    cmds:
+      - go test -count=1 ./...
+
+  build:
+    desc: Build all binaries to {{.DIST_DIR}} (lean, without debug symbols)
+    cmds:
+      - mkdir -p {{.DIST_DIR}}
+      - go build -v -ldflags "-s -w" -o {{.DIST_DIR}} ./...
+
+  linters:
+    desc: Run some linters
+    cmds:
+      - go vet ./...
+      - golint ./...
+      - staticcheck ./...
+
+  clean:
+    desc: Remove built binaries
+    cmds:
+      - rm -rf {{.DIST_DIR}}
