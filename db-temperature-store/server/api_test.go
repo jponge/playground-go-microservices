@@ -51,6 +51,9 @@ func TestAPIWithPostgres(t *testing.T) {
 		},
 		WaitingFor: wait.ForListeningPort(pgPort),
 	}
+	if err != nil {
+		t.Fatal(err)
+	}
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: req,
 		Started:          true,

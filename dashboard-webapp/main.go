@@ -96,7 +96,7 @@ func fetchData(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		sendHTTP500(writer, err)
 	}
-	_, err = fmt.Fprint(writer, string(data))
+	_, err = writer.Write(data)
 	if err != nil {
 		log.Println(err)
 	}
@@ -105,5 +105,5 @@ func fetchData(writer http.ResponseWriter, request *http.Request) {
 func sendHTTP500(writer http.ResponseWriter, err error) {
 	log.Println(err)
 	writer.WriteHeader(500)
-	fmt.Fprint(writer, err)
+	writer.Write([]byte(err.Error()))
 }

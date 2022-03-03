@@ -3,7 +3,6 @@ package server
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/jponge/playground-go-microservices/db-temperature-store/model"
 	"gorm.io/gorm"
@@ -27,7 +26,7 @@ func InitDb(dialector gorm.Dialector, config *gorm.Config) {
 
 func send500(writer http.ResponseWriter, err string) {
 	writer.WriteHeader(500)
-	fmt.Fprintf(writer, err)
+	writer.Write([]byte(err))
 }
 
 func Record(writer http.ResponseWriter, request *http.Request) {
@@ -70,7 +69,7 @@ func Record(writer http.ResponseWriter, request *http.Request) {
 	}
 	writer.Header().Add("Content-Type", "application/json")
 	writer.WriteHeader(200)
-	fmt.Fprintf(writer, string(responseBytes))
+	writer.Write(responseBytes)
 }
 
 func FetchOne(writer http.ResponseWriter, request *http.Request) {
@@ -93,7 +92,7 @@ func FetchOne(writer http.ResponseWriter, request *http.Request) {
 	}
 	writer.Header().Add("Content-Type", "application/json")
 	writer.WriteHeader(200)
-	fmt.Fprintf(writer, string(responseBytes))
+	writer.Write(responseBytes)
 }
 
 func FetchAll(writer http.ResponseWriter, request *http.Request) {
@@ -103,7 +102,7 @@ func FetchAll(writer http.ResponseWriter, request *http.Request) {
 		send500(writer, result.Error.Error())
 		return
 	}
-	bytes, err := json.Marshal(allEntities)
+	responseBytes, err := json.Marshal(allEntities)
 	if err != nil {
 		log.Println("JSON encoding failed")
 		send500(writer, err.Error())
@@ -111,5 +110,5 @@ func FetchAll(writer http.ResponseWriter, request *http.Request) {
 	}
 	writer.Header().Add("Content-Type", "application/json")
 	writer.WriteHeader(200)
-	fmt.Fprintf(writer, string(bytes))
+	writer.Write(responseBytes)
 }
