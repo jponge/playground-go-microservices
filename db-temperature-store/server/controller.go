@@ -10,9 +10,11 @@ import (
 	"net/http"
 )
 
-var db *gorm.DB
+type Controller struct {
+	DB *gorm.DB
+}
 
-func InitDb(dialector gorm.Dialector, config *gorm.Config) {
+func NewController(dialector gorm.Dialector, config *gorm.Config) Controller {
 	dbc, err := gorm.Open(dialector, config)
 	if err != nil {
 		log.Fatal("DB opening failed: ", err)
@@ -21,7 +23,9 @@ func InitDb(dialector gorm.Dialector, config *gorm.Config) {
 	if err != nil {
 		log.Fatal("Migration failed: ", err)
 	}
-	db = dbc
+	return Controller{
+		DB: dbc,
+	}
 }
 
 func send500(writer http.ResponseWriter, err string) {
@@ -29,7 +33,7 @@ func send500(writer http.ResponseWriter, err string) {
 	writer.Write([]byte(err))
 }
 
-func Record(writer http.ResponseWriter, request *http.Request) {
+func (controller *Controller) Record(writer http.ResponseWriter, request *http.Request) {
 	defer request.Body.Close()
 	updateRequest, err := model.TemperatureUpdateFromJSONReader(request.Body)
 	if err != nil {
@@ -38,10 +42,10 @@ func Record(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	entity := &model.TemperatureUpdate{}
-	result := db.Where("sensor_id = ?", updateRequest.SensorID).First(entity)
+	result := controller.DB.Where("sensor_id = ?", updateRequest.SensorID).First(entity)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			result = db.Create(updateRequest)
+			result = controller.DB.Create(updateRequest)
 			if result.Error != nil {
 				log.Println("Recording failed", result.Error)
 				send500(writer, result.Error.Error())
@@ -55,7 +59,7 @@ func Record(writer http.ResponseWriter, request *http.Request) {
 		}
 	}
 	entity.Value = updateRequest.Value
-	result = db.Save(entity)
+	result = controller.DB.Save(entity)
 	if result.Error != nil {
 		log.Println("Updating record failed", result.Error)
 		send500(writer, result.Error.Error())
@@ -72,10 +76,10 @@ func Record(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(responseBytes)
 }
 
-func FetchOne(writer http.ResponseWriter, request *http.Request) {
+func (controller *Controller) FetchOne(writer http.ResponseWriter, request *http.Request) {
 	sensorID := chi.URLParam(request, "id")
 	entity := &model.TemperatureUpdate{}
-	result := db.Where("sensor_id = ?", sensorID).First(entity)
+	result := controller.DB.Where("sensor_id = ?", sensorID).First(entity)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			writer.WriteHeader(404)
@@ -95,9 +99,9 @@ func FetchOne(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(responseBytes)
 }
 
-func FetchAll(writer http.ResponseWriter, request *http.Request) {
+func (controller *Controller) FetchAll(writer http.ResponseWriter, request *http.Request) {
 	var allEntities []model.TemperatureUpdate
-	result := db.Find(&allEntities)
+	result := controller.DB.Find(&allEntities)
 	if result.Error != nil {
 		send500(writer, result.Error.Error())
 		return

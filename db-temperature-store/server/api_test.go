@@ -28,9 +28,9 @@ func TestAPIWithSqliteDB(t *testing.T) {
 	defer os.Remove(fileToCleanup.Name())
 
 	log.Println("Using temporary DB file", fileToCleanup.Name())
-	InitDb(sqlite.Open(fileToCleanup.Name()), &gorm.Config{})
+	controller := NewController(sqlite.Open(fileToCleanup.Name()), &gorm.Config{})
 
-	server := httptest.NewServer(AppRouter())
+	server := httptest.NewServer(AppRouter(controller))
 	defer server.Close()
 
 	performInteractions(t, server)
@@ -77,9 +77,9 @@ func TestAPIWithPostgres(t *testing.T) {
 
 	dsn := fmt.Sprintf("host=%s user=gorm password=gorm dbname=gorm port=%d sslmode=disable TimeZone=Europe/Paris", mappedHost, mappedPort.Int())
 	log.Println("Connection parameters", dsn)
-	InitDb(postgres.Open(dsn), &gorm.Config{})
+	controller := NewController(postgres.Open(dsn), &gorm.Config{})
 
-	server := httptest.NewServer(AppRouter())
+	server := httptest.NewServer(AppRouter(controller))
 	defer server.Close()
 
 	performInteractions(t, server)

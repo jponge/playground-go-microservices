@@ -16,10 +16,11 @@ var runCmd = &cobra.Command{
 	Short: "Run the server",
 	Run: func(cmd *cobra.Command, args []string) {
 		dbType := viper.GetString("db")
+		var controller server.Controller
 		switch dbType {
 		case "sqlite":
 			dbFile := viper.GetString("db.sqlite.file")
-			server.InitDb(sqlite.Open(dbFile), &gorm.Config{})
+			controller = server.NewController(sqlite.Open(dbFile), &gorm.Config{})
 		case "postgres":
 			dsn := fmt.Sprintf(
 				"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Europe/Paris",
@@ -29,17 +30,17 @@ var runCmd = &cobra.Command{
 				viper.GetString("db.postgres.database"),
 				viper.GetInt("db.postgres.port"),
 			)
-			server.InitDb(postgres.Open(dsn), &gorm.Config{})
+			controller = server.NewController(postgres.Open(dsn), &gorm.Config{})
 		default:
 			log.Fatal("DB type not supported", dbType)
 		}
 		if dbType == "sqlite" {
 			dbFile := viper.GetString("db.sqlite.file")
-			server.InitDb(sqlite.Open(dbFile), &gorm.Config{})
+			controller = server.NewController(sqlite.Open(dbFile), &gorm.Config{})
 		} else {
 			log.Fatal("DB type not supported", dbType)
 		}
-		server.Start(viper.GetString("http.host"), viper.GetInt("http.port"))
+		server.Start(viper.GetString("http.host"), viper.GetInt("http.port"), controller)
 	},
 }
 

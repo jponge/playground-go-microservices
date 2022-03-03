@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-func Start(host string, port int) {
-	router := AppRouter()
+func Start(host string, port int, controller Controller) {
+	router := AppRouter(controller)
 	address := fmt.Sprintf("%s:%d", host, port)
 	server := &http.Server{
 		Addr:         address,
@@ -42,11 +42,11 @@ func Start(host string, port int) {
 	log.Println("👋 Bye!")
 }
 
-func AppRouter() *chi.Mux {
+func AppRouter(controller Controller) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
-	router.Post("/record", Record)
-	router.Get("/data/{id}", FetchOne)
-	router.Get("/data", FetchAll)
+	router.Post("/record", controller.Record)
+	router.Get("/data/{id}", controller.FetchOne)
+	router.Get("/data", controller.FetchAll)
 	return router
 }
