@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/jponge/playground-go-microservices/db-temperature-store/controller"
 	"github.com/jponge/playground-go-microservices/db-temperature-store/server"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,11 +17,11 @@ var runCmd = &cobra.Command{
 	Short: "Run the server",
 	Run: func(cmd *cobra.Command, args []string) {
 		dbType := viper.GetString("db")
-		var controller server.Controller
+		var apiController controller.Controller
 		switch dbType {
 		case "sqlite":
 			dbFile := viper.GetString("db.sqlite.file")
-			controller = server.NewController(sqlite.Open(dbFile), &gorm.Config{})
+			apiController = controller.NewController(sqlite.Open(dbFile), &gorm.Config{})
 		case "postgres":
 			dsn := fmt.Sprintf(
 				"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Europe/Paris",
@@ -30,17 +31,17 @@ var runCmd = &cobra.Command{
 				viper.GetString("db.postgres.database"),
 				viper.GetInt("db.postgres.port"),
 			)
-			controller = server.NewController(postgres.Open(dsn), &gorm.Config{})
+			apiController = controller.NewController(postgres.Open(dsn), &gorm.Config{})
 		default:
 			log.Fatal("DB type not supported", dbType)
 		}
 		if dbType == "sqlite" {
 			dbFile := viper.GetString("db.sqlite.file")
-			controller = server.NewController(sqlite.Open(dbFile), &gorm.Config{})
+			apiController = controller.NewController(sqlite.Open(dbFile), &gorm.Config{})
 		} else {
 			log.Fatal("DB type not supported", dbType)
 		}
-		server.Start(viper.GetString("http.host"), viper.GetInt("http.port"), controller)
+		server.Start(viper.GetString("http.host"), viper.GetInt("http.port"), apiController)
 	},
 }
 

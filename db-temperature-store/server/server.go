@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jponge/playground-go-microservices/db-temperature-store/controller"
 	"log"
 	"net/http"
 	"os"
@@ -12,7 +13,7 @@ import (
 	"time"
 )
 
-func Start(host string, port int, controller Controller) {
+func Start(host string, port int, controller controller.Controller) {
 	router := AppRouter(controller)
 	address := fmt.Sprintf("%s:%d", host, port)
 	server := &http.Server{
@@ -42,7 +43,7 @@ func Start(host string, port int, controller Controller) {
 	log.Println("👋 Bye!")
 }
 
-func AppRouter(controller Controller) *chi.Mux {
+func AppRouter(controller controller.Controller) *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Post("/record", controller.Record)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/docker/go-connections/nat"
+	controller2 "github.com/jponge/playground-go-microservices/db-temperature-store/controller"
 	"github.com/jponge/playground-go-microservices/db-temperature-store/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
@@ -28,7 +29,7 @@ func TestAPIWithSqliteDB(t *testing.T) {
 	defer os.Remove(fileToCleanup.Name())
 
 	log.Println("Using temporary DB file", fileToCleanup.Name())
-	controller := NewController(sqlite.Open(fileToCleanup.Name()), &gorm.Config{})
+	controller := controller2.NewController(sqlite.Open(fileToCleanup.Name()), &gorm.Config{})
 
 	server := httptest.NewServer(AppRouter(controller))
 	defer server.Close()
@@ -77,7 +78,7 @@ func TestAPIWithPostgres(t *testing.T) {
 
 	dsn := fmt.Sprintf("host=%s user=gorm password=gorm dbname=gorm port=%d sslmode=disable TimeZone=Europe/Paris", mappedHost, mappedPort.Int())
 	log.Println("Connection parameters", dsn)
-	controller := NewController(postgres.Open(dsn), &gorm.Config{})
+	controller := controller2.NewController(postgres.Open(dsn), &gorm.Config{})
 
 	server := httptest.NewServer(AppRouter(controller))
 	defer server.Close()
