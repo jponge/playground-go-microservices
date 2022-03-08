@@ -77,9 +77,13 @@ func setupFiberApp() *fiber.App {
 	db.Put("123-abc", 19.2)
 	db.Put("456-def", -2.33)
 
-	app.Get("/data", handlers.AllDataHandler(db))
-	app.Get("/data/:id", handlers.SingleDataHandler(db))
-	app.Post("/record", handlers.RecordHandler(db))
+	api := handlers.API{
+		DB: db,
+	}
+
+	app.Get("/data", api.AllDataHandler)
+	app.Get("/data/:id", api.SingleDataHandler)
+	app.Post("/record", api.RecordHandler)
 
 	return app
 }
