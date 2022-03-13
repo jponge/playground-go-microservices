@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jponge/playground-go-microservices/pulsar/temperature-store-gateway/data"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
 	"os"
@@ -52,7 +53,11 @@ func (service Service) Start() {
 func (service Service) router() *chi.Mux {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
-	router.Post("/record", service.record)
+	router.Method(http.MethodGet, "/metrics", promhttp.Handler())
+	router.Route("/record", func(r chi.Router) {
+		r.Use(TrackIngestionMetrics)
+		r.Post("/", service.record)
+	})
 	return router
 }
 
