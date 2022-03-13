@@ -1,0 +1,3 @@
+pulsar:
+  broker-address: "pulsar://localhost:6650"
+  topic: "temperature-updates"

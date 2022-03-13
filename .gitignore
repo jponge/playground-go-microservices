@@ -1,3 +1,4 @@
 .idea
 /dashboard-webapp/*.pem
 db-temperature-store/*.db
+/_dist/
