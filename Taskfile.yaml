@@ -28,6 +28,11 @@ tasks:
       - golint ./...
       - staticcheck ./...
 
+  upgrade:
+    desc: Upgrade dependencies
+    cmds:
+      - go get -d -u ./...
+
   clean:
     desc: Remove built binaries
     cmds:
