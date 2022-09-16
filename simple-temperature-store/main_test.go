@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/jponge/playground-go-microservices/simple-temperature-store/model"
-	"github.com/stretchr/testify/assert"
 	"io"
-	"io/ioutil"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/jponge/playground-go-microservices/simple-temperature-store/model"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAPI(t *testing.T) {
@@ -98,7 +98,7 @@ func TestAPI(t *testing.T) {
 			}
 			expectedJSON, err := json.Marshal(tt.args.expectedJSON)
 			assert.NoError(t, err, "JSON marshalling")
-			actualJSON, err := ioutil.ReadAll(resp.Body)
+			actualJSON, err := io.ReadAll(resp.Body)
 			assert.NoError(t, err, "Body response")
 			assert.JSONEq(t, string(expectedJSON), string(actualJSON))
 		})
